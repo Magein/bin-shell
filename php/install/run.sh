@@ -120,6 +120,8 @@ extensions=(
             --prefix="$prefix"
             --enable-fpm
             --enable-mysqlnd
+            --with-mysqli=mysqlnd
+            --with-pdo-mysql=mysqlnd
             --enable-mbstring
             --disable-cgi
             --with-openssl
@@ -499,7 +501,9 @@ get_gpg_keys(){
                     gpg_key="$gpg_key $i"
                 fi
             done
-            echo -n "php-$keys.* $gpg_key" >> "$gpg_key_file"
+            # 这里不知道为什么没有进行换行，所以就多输出一个空格
+            echo "" >> "$gpg_key_file"
+            echo "php-$keys.* $gpg_key" >> "$gpg_key_file"
         fi
     fi
 
@@ -678,6 +682,8 @@ configure(){
 
     timer_start ./configure "${extensions[@]}"
     permission_denied "$log"
+
+    sudu make clean > /dev/null 2&>1
 
     echo "Make start,Please wait a moment"
     timer_start sudo make
