@@ -1,0 +1,24 @@
+#!/bin/sh
+
+operate=
+if [ $1 ]; then
+    operate=$1
+else
+    operate='Exited'
+fi
+
+if [ "$operate" = 'All' ]; then
+    container=($(docker ps -a -q))
+else
+    container=($(docker ps -a | grep "$operate" | awk '{print $1}'))
+fi
+
+if [ -n "$container" ]; then
+
+    docker stop "${container[@]}"
+
+    docker rm "${container[@]}"
+
+fi
+
+

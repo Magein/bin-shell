@@ -1,0 +1,47 @@
+#!/bin/sh
+
+usage(){
+    echo "Usage:"
+    echo "  delete-docker-image-none [options]"
+    echo "  delete-docker-image-none --remove-container Exited"
+    echo "  delete-docker-image-none --remove-container All"
+    echo "Options:"
+    echo "  -h, --help                      show information for help"
+    echo "  -r,--remove-container           Remove the container from the state to exit or appoint(ALL,Exited)"
+}
+
+options=$(getopt -o h,r: --long help,remove-container: -n "error" -- "$@")
+
+if [ $? -ne 0 ]; then
+    exit 0
+fi
+
+eval set -- "${options}"
+
+status=
+
+while true;
+do
+    case $1 in
+        -h|--help)
+            usage
+            exit 0
+        ;;
+        -r|--remove-container)
+            status=$2
+            shift 2
+        ;;
+        *)
+        break
+        ;;
+    esac
+done
+
+if [ -n "$status" ]; then
+    if [ -f /usr/local/bin/delete-docker-container ]; then
+        delete-docker-container "$status"
+    fi
+fi
+
+docker images | grep none | awk '{print $3}' | xargs docker rmi
+
