@@ -1,6 +1,6 @@
 #!/bin/sh
 
-segmentation(){
+Segmentation(){
     echo ""
     echo "#################################################################"
     echo ""
@@ -11,16 +11,16 @@ segmentation(){
     fi
 }
 
-ini(){
+Ini(){
     {
         echo "[php]"
         echo "display_errors = On"
     } | tee "$1" > /dev/null
 
-    segmentation "Create php.ini file complete" $1
+    Segmentation "Create php.ini file complete" $1
 }
 
-fpm(){
+Fpm(){
     {
         echo "[global]"
         echo "pid = run/php-fpm.pid"
@@ -29,10 +29,10 @@ fpm(){
         echo "include=/usr/local/etc/php-fpm.d/*.conf"
     } | tee "$1" > /dev/null
 
-    segmentation "Create php-fpm.conf file complete" $1
+    Segmentation "Create php-fpm.conf file complete" $1
 }
 
-pool(){
+Pool(){
     {
         echo "[www]"
         echo "user = nobody"
@@ -45,10 +45,10 @@ pool(){
         echo "pm.max_spare_servers = 3"
     } | tee "$1" > /dev/null
 
-    segmentation "Create pool.conf file complete" $1
+    Segmentation "Create pool.conf file complete" $1
 }
 
-nginx(){
+Nginx(){
 
     root="html"
 
@@ -103,5 +103,5 @@ nginx(){
 
     } | tee "$1"  > /dev/null
 
-    segmentation "Create nginx.conf file complete" $1
+    Segmentation "Create nginx.conf file complete" $1
 }

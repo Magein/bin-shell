@@ -1,12 +1,15 @@
 #!/bin/sh
 
+# 引入配置文件
+source ./config.sh
+
 # 帮助信息
-usage(){
+Usage(){
     echo "Usage:"
     echo "  run [options]"
     echo "  run -c /usr/local/conf -w /var/www -l"
     echo "Options:"
-    echo "  -c, --check                 Check the running environment"
+    echo "  -c, --check                 Check the running environment,If there is no output, satisfy"
     echo "  -h, --help                  Show information for help"
     echo "  -r, --run                   Run web environment"
     echo "  --composer                  Composer file storage location"
@@ -37,7 +40,7 @@ usage(){
 }
 
 # 检测web服务启动所需要的环境
-check(){
+Check(){
     # 是否已经安装docker
     if  [ -f /usr/bin/docker ]; then
         version=`docker -v | awk '{print $3}' | awk -F. '{print $1}'`
@@ -49,21 +52,20 @@ check(){
         echo "please install docker,version greater than 17.x"
         exit 1
     fi
-    echo "Check Pass"
 }
 
 # 创建目录
-make_directory(){
+MakeDirectory(){
     for dir in "$@";
-        do
-            if [ ! -d "$dir" ];then
-                mkdir -p "$dir"
-            fi
+    do
+        if [ ! -d "$dir" ];then
+            mkdir -p "$dir"
+        fi
     done
 }
 
 # 创建文件
-make_file(){
+MakeFile(){
      for name in "$@";
         do
             if [ ! -f "$name" ];then
@@ -72,8 +74,9 @@ make_file(){
     done
 }
 
-image(){
-    docker images | grep -w "$1" > /dev/null
+# 检测镜像是否已经拉取
+CheckImage(){
+    docker images | grep -w "$1" > /dev/null 2>&1
     if [ $? -eq 1 ];then
         # 没有匹配到
         return 0
@@ -83,13 +86,22 @@ image(){
 }
 
 # 下载镜像
-pull(){
+# docker 要先运行
+Pull(){
+    systemctl status docker | grep "Active: inactive (dead)" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        Segmentation ''
+        echo "Please run docker ( systemctl start docker )"
+        echo ''
+        exit 0
+    fi
+
     for registry in "$@";
         do
-        image "$registry"
+        CheckImage "$registry"
         if [ $? -eq 0 ]; then
             docker pull "$registry" > /dev/null 2>&1
-            image "$registry"
+            CheckImage "$registry"
             if [ $? -eq 0 ]; then
                 echo "Pull $registry fail"
                 echo "exit"
@@ -100,28 +112,17 @@ pull(){
     done
 }
 
+# 基础参数
 source="registry.cn-hangzhou.aliyuncs.com/magein/"
 nginx="alpine-nginx-1.13.2"
 php="alpine-php-7.1.17"
-
 composer="$PWD"
-composer_file="$composer/composer.yml"
 conf="/usr/local/docker/"
 
-nginx_conf="${conf}nginx.conf"
-php_ini="${conf}php.ini"
-php_fpm_conf="${conf}php-fpm.conf"
-pool="${conf}php-fpm.d/"
-pool_conf="${pool}www.conf"
-web="/var/www/"
-log="/var/log/"
-nginx_log="${log}nginx/"
-php_fpm_log="${log}php/"
-
-options=$(getopt -o c,h --long composer:,conf:,nginx-conf:php-ini:,php-fpm-conf:,web:,log:,nginx-log:,php-fpm-log:,nginx-log:source::,nginx:php: -n "error" -- "$@")
-
-if [ ! $? ]; then
-    exit 1
+# 接收命令行传递的参数
+options=$(getopt -o c,h --long help,composer:,conf:,nginx-conf:php-ini:,php-fpm-conf:,web:,log:,nginx-log:,php-fpm-log:,nginx-log:source::,nginx:php: -n "error" -- "$@")
+if [ $? -eq 1 ]; then
+    exit 0
 fi
 
 eval set -- "${options}"
@@ -130,11 +131,11 @@ while true;
 do
     case $1 in
         -c|--check)
-            check
+            Check
             exit 0
         ;;
         -h|--help)
-            usage
+            Usage
             exit 0
         ;;
         --composer)
@@ -179,36 +180,74 @@ do
     esac
 done
 
-# 引入配置文件
-source ./config.sh
+# 根据传递的参数生成响应的变量
+composer_file="${composer}composer.yml"
+nginx_conf="${conf}nginx.conf"
+php_ini="${conf}php.ini"
+php_fpm_conf="${conf}php-fpm.conf"
+pool="${conf}php-fpm.d/"
+pool_conf="${pool}www.conf"
+web="/var/www/"
+log="/var/log/"
+nginx_log="${log}nginx/"
+php_fpm_log="${log}php/"
 
-check
+# 检测安装环境
+Check
+Segmentation "Check pass"
 
-segmentation "Check pass"
-
+# 拉取镜像
 if [ -n "$source" ]; then
     nginx="$source$nginx"
     php="$source$php"
 fi
+Pull "$nginx" "$php"
 
-segmentation "Pull images"
-pull "$nginx" "$php"
+# 创建配置文件
+Segmentation "Start Create configuration file"
 
-segmentation "Start Create configuration file"
+# 检查基础目录
+# 1. 检测是否存在
+#   1.1 不存在则创建
+#   1.2 修改所属组为docker
+#   1.3 修改权限为 775
+# 2. 检测是否有可写权限
+if [ ! -d "$conf" ]; then
+    MakeDirectory "$conf"
+    chgrp docker "$conf"
+    chmod 775 "$conf"
+elif [ ! -w "$conf" ];then
+    Segmentation "Configuration file directory cannot be written"
+    echo "  Storage location: $conf"
+    exit 0
+fi
 
-# 创建目录
-make_directory "$conf" "$web" "$log" "$nginx_log" "$php_fpm_log" "$pool" "$composer"
+# 检测日志文件是否有可写权限
+if [ ! -w "$log" ]; then
+    Segmentation "Log file directory cannot be written"
+    echo "  Storage location: $log"
+    echo "  Recommended use setfacl"
+    exit 0
+fi
 
-# 创建文件
+# 创建相关目录
+MakeDirectory "$web" "$log" "$nginx_log" "$php_fpm_log" "$pool" "$composer"
 
-make_file "$nginx_conf" "$php_ini" "$php_fpm_conf" "$pool_conf" "$composer_file"
+# 检测docker启动文件存放目录是否有可写权限
+if [ ! -w "$composer" ]; then
+    Segmentation "Composer file directory cannot be written"
+    echo "  Storage location: $composer"
+    echo "  You can use \"--composer\" option to change storage location"
+    exit 0
+fi
+MakeFile "$nginx_conf" "$php_ini" "$php_fpm_conf" "$pool_conf" "$composer_file"
 
-nginx   "$nginx_conf"
-ini     "$php_ini"
-fpm     "$php_fpm_conf"
-pool    "$pool_conf"
+Nginx   "$nginx_conf"
+Ini     "$php_ini"
+Fpm     "$php_fpm_conf"
+Pool    "$pool_conf"
 
-yml(){
+Yml(){
     {
         echo "version: \"3\"
 services:
@@ -235,13 +274,12 @@ services:
 "
     } | tee "$composer_file" > /dev/null
 
-    segmentation "Create composer.yml file complete" "$composer_file"
+    Segmentation "Create composer.yml file complete" "$composer_file"
 }
 
-yml
+Yml
 
-segmentation "You can use the following commands to run the web service:
-\n  systemctl start docker
+Segmentation "You can use the following commands to run the web service:
 \n  docker swarm init
 \n  docker stack deploy -c $composer_file web_service"
 #echo ""
