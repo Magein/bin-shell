@@ -10,7 +10,7 @@
         ./run.sh
         
         
-### 权限验证
+### 错误问题
 
     1. 默认配置文件路径 /usr/local/docker  docker目录是没有的，使用root身份直接创建，组修改为 docker组 把 用户加入到组中即可
      
@@ -27,7 +27,10 @@
         # docker组在安装docker的时候已经存在，默认gid为994
         chgrp -a -G xiaomage docker
         
-        附： 也可以通过 --conf 参数修改存放配置文件的位置
+        附： 
+            也可以通过 --conf 参数修改存放配置文件的位置 
+            
+            
          
     2. 日志文件
      
@@ -41,7 +44,18 @@
         
         su root
         getfacl /var/log/
-        setfacl -m g:docker:rwx /var/log/
+        setfacl -d -m mask::rwx /var/log
+        setfacl -d -m g:docker:rwx /var/log/
+        
+        附: -d 设置默认的acl规则  -m g:docker:rwx 给docker组成员添加rwx权限
+        
+        原因参考：http://man.linuxde.net/setfacl
+        
+    3. pathinfo 配置
+     
+        参考:
+         
+        http://note.youdao.com/noteshare?id=c380dabf5c4efde9848171a52187e5b2&sub=84826B9F5FBB4FB0898C30CE6CC1C4C1
         
         
         

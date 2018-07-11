@@ -1,0 +1,23 @@
+version: "3"
+services:
+  php:
+    image: registry.cn-hangzhou.aliyuncs.com/magein/alpine-php-7.1.17
+    ports:
+      - 9000:9000
+    volumes:
+      - /usr/local/docker/:/usr/local/etc/
+      - /var/log/php/:/usr/local/var/log
+      - /var/www/:/usr/local/nginx/html
+    deploy:
+      replicas: 1
+  nginx:
+    image: registry.cn-hangzhou.aliyuncs.com/magein/alpine-nginx-1.13.2
+    ports:
+      - 80:80
+    volumes:
+      - /usr/local/docker/nginx.conf:/usr/local/nginx/conf/nginx.conf
+      - /var/log/nginx/:/usr/local/nginx/logs/
+      - /var/www/:/usr/local/nginx/html
+    deploy:
+      replicas: 1
+
