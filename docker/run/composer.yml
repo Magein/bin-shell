@@ -20,4 +20,3 @@ services:
       - /var/www/:/usr/local/nginx/html
     deploy:
       replicas: 1
-

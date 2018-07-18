@@ -200,9 +200,3 @@ Yml
 Segmentation "You can use the following commands to run the web service:
 \n  docker swarm init
 \n  docker stack deploy -c $composer_file web_service"
-#echo ""
-#echo "##########################################################"
-#echo "You can use the following commands to run the web service"
-#echo "systemctl start docker"
-#echo "docker swarm init"
-#echo "docker stack deploy -c $composer_file web_service"
