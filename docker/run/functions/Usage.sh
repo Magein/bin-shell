@@ -8,7 +8,6 @@ Usage(){
     echo "Options:"
     echo "  -c, --check                 Check the running environment,If there is no output, satisfy"
     echo "  -h, --help                  Show information for help"
-    echo "  -r, --run                   Run web environment"
     echo "  --composer                  Composer file storage location"
     echo "  --conf                      The location of nginx.conf php-fpm.conf php.ini storage"
     echo "      --nginx-conf            nginx.conf file storage location"

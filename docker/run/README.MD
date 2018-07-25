@@ -47,7 +47,11 @@
         setfacl -d -m mask::rwx /var/log
         setfacl -d -m g:docker:rwx /var/log/
         
-        附: -d 设置默认的acl规则  -m g:docker:rwx 给docker组成员添加rwx权限
+        附: 
+            -d 设置默认的acl规则，该规则会应用后以后创建的文件夹
+               在目录下创建的文件，如果文件的权限（ll的结果）跟acl的权限不一样，getfacl的结果中会出现 #effective:r--
+          
+            -m g:docker:rwx 给docker组成员添加rwx权限
         
         原因参考：http://man.linuxde.net/setfacl
         

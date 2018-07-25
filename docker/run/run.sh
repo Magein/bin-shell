@@ -75,11 +75,15 @@ done
 
 # 根据传递的参数生成响应的变量
 composer_file="${composer}/composer.yml"
-nginx_conf="${conf}nginx.conf"
-php_ini="${conf}php.ini"
-php_fpm_conf="${conf}php-fpm.conf"
-pool="${conf}php-fpm.d/"
+nginx_conf_path="${conf}nginx/"
+nginx_conf="${nginx_conf_path}nginx.conf"
+
+php_conf_path="${conf}php/"
+php_ini="${php_conf_path}php.ini"
+php_fpm_conf="${php_conf_path}php-fpm.conf"
+pool="${php_conf_path}php-fpm.d/"
 pool_conf="${pool}www.conf"
+
 web="/var/www/"
 log="/var/log/"
 nginx_log="${log}nginx/"
@@ -93,7 +97,6 @@ Check "$conf" "$log" "$composer"
 
 # 指定了 -c 或者 --check 参数，则值输出检测结果  不继续往下执行
 if [ "$only_check" == "true" ]; then
-
     exit 0
 fi
 
@@ -109,7 +112,6 @@ if [ -n "$source" ]; then
     nginx="$source$nginx"
     php="$source$php"
 fi
-
 
 # 輸出分隔符
 Segmentation(){
@@ -161,7 +163,7 @@ Pull(){
 Pull "$nginx" "$php"
 
 # 创建相关目录以及相关文件
-MakeDirectory "$web" "$log" "$nginx_log" "$php_fpm_log" "$pool" "$composer"
+MakeDirectory "$web" "$nginx_conf_path" "$php_conf_path" "$log" "$nginx_log" "$php_fpm_log" "$pool" "$composer"
 MakeFile "$nginx_conf" "$php_ini" "$php_fpm_conf" "$pool_conf" "$composer_file"
 Write "$php_ini" "$nginx_conf" "$php_fpm_conf" "$pool_conf"
 
@@ -174,7 +176,7 @@ services:
     ports:
       - 9000:9000
     volumes:
-      - $conf:/usr/local/etc/
+      - $php_conf_path:/usr/local/etc/
       - $php_fpm_log:/usr/local/var/log
       - $web:/usr/local/nginx/html
     deploy:
@@ -184,7 +186,7 @@ services:
     ports:
       - 80:80
     volumes:
-      - ${conf}nginx.conf:/usr/local/nginx/conf/nginx.conf
+      - $nginx_conf:/usr/local/nginx/conf/nginx.conf
       - $nginx_log:/usr/local/nginx/logs/
       - $web:/usr/local/nginx/html
     deploy:

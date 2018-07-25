@@ -5,7 +5,7 @@ services:
     ports:
       - 9000:9000
     volumes:
-      - /usr/local/docker/:/usr/local/etc/
+      - /usr/local/docker/php/:/usr/local/etc/
       - /var/log/php/:/usr/local/var/log
       - /var/www/:/usr/local/nginx/html
     deploy:
@@ -15,8 +15,9 @@ services:
     ports:
       - 80:80
     volumes:
-      - /usr/local/docker/nginx.conf:/usr/local/nginx/conf/nginx.conf
+      - /usr/local/docker/nginx/nginx.conf:/usr/local/nginx/conf/nginx.conf
       - /var/log/nginx/:/usr/local/nginx/logs/
       - /var/www/:/usr/local/nginx/html
     deploy:
       replicas: 1
+
