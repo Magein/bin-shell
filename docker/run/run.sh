@@ -174,23 +174,35 @@ services:
   php:
     image: $php
     ports:
-      - 9000:9000
+        - 9000:9000
     volumes:
-      - $php_conf_path:/usr/local/etc/
-      - $php_fpm_log:/usr/local/var/log
-      - $web:/usr/local/nginx/html
+        - $php_conf_path:/usr/local/etc/
+        - $php_fpm_log:/usr/local/var/log
+        - $web:/usr/local/nginx/html
     deploy:
-      replicas: 1
+        # mode 默认值 replicated，可选值 global
+        mode: replicated
+        replicas: 1
+        # 容器异常退出时候的处理方式，如内存不足导致
+        restart_policy:
+            # 配置是否以及如何在容器退出时重新启动容器
+            # 可选值 none on-failure any(default)
+            condition: on-failure
+            # 重新尝试启动之间的等待时间，默认值为0
+            delay: 0
+            # 在放弃之前尝试重新启动容器的次数（默认值：永不放弃） 0 表示不尝试
+            max_attempts: 5
   nginx:
     image: $nginx
     ports:
-      - 80:80
+        - 80:80
     volumes:
-      - $nginx_conf:/usr/local/nginx/conf/nginx.conf
-      - $nginx_log:/usr/local/nginx/logs/
-      - $web:/usr/local/nginx/html
+        - $nginx_conf:/usr/local/nginx/conf/nginx.conf
+        - $nginx_log:/usr/local/nginx/logs/
+        - $web:/usr/local/nginx/html
     deploy:
-      replicas: 1
+        mode: replicated
+        replicas: 1
 "
     } | tee "$composer_file" > /dev/null
 
