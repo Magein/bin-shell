@@ -139,6 +139,8 @@ Write(){
             fi
         fi
     done
+
+    echo "Write all complete"
 }
 
 # 拉取镜像
@@ -189,7 +191,7 @@ services:
             # 可选值 none on-failure any(default)
             condition: on-failure
             # 重新尝试启动之间的等待时间，默认值为0
-            delay: 0
+            delay: 0s
             # 在放弃之前尝试重新启动容器的次数（默认值：永不放弃） 0 表示不尝试
             max_attempts: 5
   nginx:
